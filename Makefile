@@ -5,7 +5,12 @@ GO ?= go
 GOFMT ?= gofmt
 ARGS ?=
 
-.PHONY: help build run test test-race vet fmt fmt-check check coverage tidy install clean
+# Install locally by default; override these for system installs or packaging.
+PREFIX ?= $(HOME)/.local
+BINDIR ?= $(PREFIX)/bin
+DESTDIR ?=
+
+.PHONY: help build run test test-race vet fmt fmt-check check coverage tidy install uninstall clean
 
 help: ## Show available commands
 	@printf 'Meetlet development commands:\n\n'
@@ -45,8 +50,13 @@ coverage: ## Run tests and print coverage; save coverage.out
 tidy: ## Update go.mod and go.sum after dependency changes
 	$(GO) mod tidy
 
-install: ## Install to GOBIN, or GOPATH/bin when GOBIN is unset
-	$(GO) install .
+install: build ## Install to PREFIX/bin (default: ~/.local/bin)
+	install -d "$(DESTDIR)$(BINDIR)"
+	install -m 0755 bin/meetlet "$(DESTDIR)$(BINDIR)/meetlet"
+	@printf 'Installed meetlet to %s\n' "$(DESTDIR)$(BINDIR)/meetlet"
+
+uninstall: ## Remove the installed executable (uses the same install variables)
+	rm -f "$(DESTDIR)$(BINDIR)/meetlet"
 
 clean: ## Remove the built executable and coverage report
 	rm -f bin/meetlet coverage.out

@@ -37,6 +37,42 @@ The interactive planner starts with London, Campinas, Florida (Eastern), and Bon
 The initial meeting is **15:00 today in the source location**, with a one-hour
 duration. Redirecting output prints the meeting times instead of starting the UI.
 
+## Install
+
+Build and install the CLI for your user:
+
+```sh
+make install
+meetlet
+```
+
+By default, this builds the current source and installs the executable as
+`~/.local/bin/meetlet` with executable permissions. Run `make install` again to
+update it after changing the code. If `~/.local/bin` is not already on your
+`PATH`, add this line to your shell configuration (`~/.zshrc` or `~/.bashrc`)
+and open a new terminal:
+
+```sh
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Choose another installation prefix or an exact executable directory:
+
+```sh
+make install PREFIX=/usr/local    # Installs /usr/local/bin/meetlet
+make install BINDIR=/path/to/bin  # Installs /path/to/bin/meetlet
+```
+
+You need write access to the destination. `make uninstall` removes the installed
+executable; use the same `PREFIX` or `BINDIR` override if you customized it.
+Packaging tools can set `DESTDIR` to stage an installation without writing to
+the final system directory:
+
+```sh
+make install PREFIX=/usr DESTDIR=/tmp/meetlet-package
+# Creates /tmp/meetlet-package/usr/bin/meetlet.
+```
+
 ## Interactive controls
 
 | Key | Action |
@@ -242,7 +278,8 @@ Run `make` or `make help` to list the commands:
 | `make check` | Check formatting, run vet, and run tests with the race detector |
 | `make coverage` | Run tests, print coverage, and write `coverage.out` |
 | `make tidy` | Update module files after changing dependencies |
-| `make install` | Install to `GOBIN`, or `GOPATH/bin` when unset |
+| `make install` | Build and install to `~/.local/bin` (override `PREFIX` or `BINDIR`) |
+| `make uninstall` | Remove the installed executable |
 | `make clean` | Remove the built executable and coverage report |
 
 Pass application arguments through `ARGS`, and override the Go executable when
