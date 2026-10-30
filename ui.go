@@ -444,7 +444,7 @@ func (m ui) View() tea.View {
 			b.WriteString(m.warning.Render(changes[0].String()) + "\n")
 		}
 		if next := planner.NextChange(loc, m.meeting.At); next != nil {
-			b.WriteString(m.muted.Render("Next after meeting: ") + next.String() + "\n")
+			b.WriteString(m.warning.Render("Next after meeting: "+next.String()) + "\n")
 		} else {
 			b.WriteString(m.muted.Render("No clock change in the 12 months after the meeting.") + "\n")
 		}

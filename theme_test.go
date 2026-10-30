@@ -7,6 +7,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 
+	"meetlet/internal/planner"
 	"meetlet/internal/settings"
 )
 
@@ -56,6 +57,41 @@ func TestConfiguredColoursAcrossViews(t *testing.T) {
 	view := m.View()
 	if view.ForegroundColor != lipgloss.Color(cfg.Colours.Text) || view.BackgroundColor != lipgloss.Color(cfg.Colours.Background) {
 		t.Fatal("configured text/background colours were not applied")
+	}
+}
+
+func TestClockChangeWarningColours(t *testing.T) {
+	cfg := settings.Default()
+	cfg.Colours.Warning = "#D8A657"
+	cfg.Colours.Muted = "#928374"
+	for _, date := range []string{"2026-10-28", "2026-11-02"} {
+		t.Run(date, func(t *testing.T) {
+			meeting, _, err := meetingArgs([]string{"--date", date}, cfg, testNow, &bytes.Buffer{}, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			m := newUI(cfg, "unused.yaml", meeting, testNow)
+			m.width = 110
+			if date == "2026-11-02" {
+				m.selected = 2 // Florida changes clocks between now and the meeting.
+			}
+			loc, err := cfg.Locations[m.selected].Load()
+			if err != nil {
+				t.Fatal(err)
+			}
+			view := m.View().Content
+			next := planner.NextChange(loc, meeting.At)
+			if next == nil || !strings.Contains(view, m.warning.Render("Next after meeting: "+next.String())) {
+				t.Fatal("upcoming clock-change notice does not use the configured warning colour")
+			}
+			changes := planner.Changes(loc, testNow, meeting.At)
+			if len(changes) > 0 && !strings.Contains(view, m.warning.Render(changes[0].String())) {
+				t.Fatal("change before the meeting does not use the configured warning colour")
+			}
+			if len(changes) == 0 && !strings.Contains(view, m.muted.Render("None between now and the meeting.")) {
+				t.Fatal("no-change message should retain the muted colour")
+			}
+		})
 	}
 }
 
