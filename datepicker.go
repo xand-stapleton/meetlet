@@ -71,15 +71,15 @@ func (m ui) datePickerView() string {
 	padding := (int(first.Weekday()) + 6) % 7
 	var b strings.Builder
 	b.WriteString(strong.Render("Meeting date · "+m.meeting.Origin.Name) + "\n")
-	b.WriteString(muted.Render("Keep "+m.meeting.At.Format("15:04")+" local time · "+m.meeting.Origin.Zone) + "\n\n")
-	b.WriteString(accent.Bold(true).Render(day.Format("January 2006")) + "\n")
-	b.WriteString(muted.Render("Mon Tue Wed Thu Fri Sat Sun") + "\n")
+	b.WriteString(m.muted.Render("Keep "+m.meeting.At.Format("15:04")+" local time · "+m.meeting.Origin.Zone) + "\n\n")
+	b.WriteString(m.accent.Bold(true).Render(day.Format("January 2006")) + "\n")
+	b.WriteString(m.muted.Render("Mon Tue Wed Thu Fri Sat Sun") + "\n")
 	b.WriteString(strings.Repeat("    ", padding))
 	for n := 1; n <= last; n++ {
 		cell := fmt.Sprintf("%3d ", n)
 		switch {
 		case n == day.Day():
-			cell = accent.Bold(true).Reverse(true).Render(fmt.Sprintf("[%2d]", n))
+			cell = m.selector.Bold(true).Reverse(true).Render(fmt.Sprintf("[%2d]", n))
 		case today.Year() == day.Year() && today.Month() == day.Month() && today.Day() == n:
 			cell = strong.Render(fmt.Sprintf("%3d*", n))
 		}
@@ -89,14 +89,14 @@ func (m ui) datePickerView() string {
 		}
 	}
 	b.WriteString("\n" + strong.Render(day.Format("Monday, 02 January 2006")) + "\n")
-	b.WriteString(muted.Render("* Today: "+today.Format("Mon 02 Jan 2006")) + "\n")
+	b.WriteString(m.muted.Render("* Today: "+today.Format("Mon 02 Jan 2006")) + "\n")
 	dateInput := m.input
 	dateInput.SetWidth(12) // Keep the short date field and its format hint on one line.
-	b.WriteString(dateInput.View() + muted.Render("  YYYY-MM-DD") + "\n")
+	b.WriteString(dateInput.View() + m.muted.Render("  YYYY-MM-DD") + "\n")
 	if m.status != "" {
-		b.WriteString(warning.Render(m.status) + "\n")
+		b.WriteString(m.warning.Render(m.status) + "\n")
 	}
-	b.WriteString("\n" + muted.Render("←/→/^B/^F day · ↑/↓/^P/^N week · PgUp/PgDn month · Home today") + "\n")
-	b.WriteString(muted.Render("Type a date · Enter select · Esc cancel"))
+	b.WriteString("\n" + m.muted.Render("←/→/^B/^F day · ↑/↓/^P/^N week · PgUp/PgDn month · Home today") + "\n")
+	b.WriteString(m.muted.Render("Type a date · Enter select · Esc cancel"))
 	return b.String()
 }

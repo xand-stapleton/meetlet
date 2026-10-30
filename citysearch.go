@@ -88,32 +88,32 @@ func (m ui) citySearchView() string {
 	b.WriteString(m.input.View() + "\n")
 	switch {
 	case m.searching:
-		b.WriteString(muted.Render("Searching worldwide…") + "\n")
+		b.WriteString(m.muted.Render("Searching worldwide…") + "\n")
 	case m.searchErr != nil:
-		b.WriteString(warning.Render("Worldwide lookup unavailable; showing offline matches.") + "\n")
+		b.WriteString(m.warning.Render("Worldwide lookup unavailable; showing offline matches.") + "\n")
 	case utf8.RuneCountInString(m.searchQuery) < 2:
-		b.WriteString(muted.Render("Type 2+ letters, a zone, or Name=Area/City.") + "\n")
+		b.WriteString(m.muted.Render("Type 2+ letters, a zone, or Name=Area/City.") + "\n")
 	case len(m.matches) == 0:
-		b.WriteString(muted.Render("No matches. Try a shorter spelling or add a country after a comma.") + "\n")
+		b.WriteString(m.muted.Render("No matches. Try a shorter spelling or add a country after a comma.") + "\n")
 	}
 	start := max(0, m.suggestion-5)
 	end := min(len(m.matches), start+6)
 	for i := start; i < end; i++ {
 		line := "  " + m.matches[i].Name
 		if i == m.suggestion {
-			line = accent.Render("› " + m.matches[i].Name)
+			line = m.selector.Render("› " + m.matches[i].Name)
 		} else {
-			line = muted.Render(line)
+			line = m.muted.Render(line)
 		}
 		b.WriteString(lipgloss.NewStyle().MaxWidth(max(20, m.width-6)).Render(line) + "\n")
 	}
 	if len(m.matches) > 0 {
-		b.WriteString(muted.Render(fmt.Sprintf("%d/%d · %s", m.suggestion+1, len(m.matches), m.matches[m.suggestion].Zone)) + "\n")
+		b.WriteString(m.muted.Render(fmt.Sprintf("%d/%d · %s", m.suggestion+1, len(m.matches), m.matches[m.suggestion].Zone)) + "\n")
 	}
 	if m.status != "" {
-		b.WriteString(warning.Render(m.status) + "\n")
+		b.WriteString(m.warning.Render(m.status) + "\n")
 	}
-	b.WriteString("\n" + muted.Render("↑/↓ or Ctrl-P/N choose · Enter add · Esc cancel") + "\n")
-	b.WriteString(muted.Render(places.CityAttribution))
+	b.WriteString("\n" + m.muted.Render("↑/↓ or Ctrl-P/N choose · Enter add · Esc cancel") + "\n")
+	b.WriteString(m.muted.Render(places.CityAttribution))
 	return b.String()
 }

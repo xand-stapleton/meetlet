@@ -10,14 +10,39 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
+	"meetlet/internal/places"
 	"meetlet/internal/settings"
 )
 
 var testNow = time.Date(2026, 10, 28, 12, 0, 0, 0, time.UTC)
 
+func TestMeetingDefaultsFromConfig(t *testing.T) {
+	cfg := settings.Default()
+	cfg.Source = "Tokyo"
+	cfg.Locations = []places.Location{{Name: "Tokyo", Zone: "Asia/Tokyo"}, {Name: "Home", Zone: "Europe/London"}}
+	path := filepath.Join(t.TempDir(), "team.yaml")
+	if err := settings.Save(path, cfg); err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := run([]string{"--config", path, "check", "--date", "2026-11-02"}, &out, testNow); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"15:00 JST", "Tokyo", "Home", "06:00"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("missing %q in %s", want, out.String())
+		}
+	}
+	for _, absent := range []string{"Campinas", "Bonn", "Florida"} {
+		if strings.Contains(out.String(), absent) {
+			t.Errorf("built-in location %q leaked into configured locations", absent)
+		}
+	}
+}
+
 func TestCLIWorkflow(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("MEETLET_CONFIG", filepath.Join(dir, "config.json"))
+	t.Setenv("MEETLET_CONFIG", filepath.Join(dir, "config.yaml"))
 	invoke := func(args ...string) string {
 		t.Helper()
 		var out bytes.Buffer
@@ -52,7 +77,7 @@ func TestCLIWorkflow(t *testing.T) {
 		t.Fatal(string(b))
 	}
 	// Deleting an exported file does not depend on the locations config.
-	if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte("invalid JSON"), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "config.yaml"), []byte("invalid JSON"), 0600); err != nil {
 		t.Fatal(err)
 	}
 	invoke("delete-ics", invite)
@@ -62,7 +87,7 @@ func TestCLIWorkflow(t *testing.T) {
 }
 
 func TestCLIErrorsAndCustomDestination(t *testing.T) {
-	t.Setenv("MEETLET_CONFIG", filepath.Join(t.TempDir(), "config.json"))
+	t.Setenv("MEETLET_CONFIG", filepath.Join(t.TempDir(), "config.yaml"))
 	for _, args := range [][]string{
 		{"check", "--date", "2026-03-29", "--time", "01:30"},
 		{"check", "--date", "2026-10-25", "--time", "01:30"},
@@ -112,8 +137,10 @@ func press(m ui, key string) ui {
 }
 
 func TestInteractiveEditingAndPersistence(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "config.json")
+	path := filepath.Join(t.TempDir(), "config.yaml")
 	cfg := settings.Default()
+	cfg.Colours.Accent = "#123456"
+	cfg.Colours.Selector = "#EA6962"
 	meeting, _, err := meetingArgs(nil, cfg, testNow, &bytes.Buffer{}, false)
 	if err != nil {
 		t.Fatal(err)
@@ -148,7 +175,7 @@ func TestInteractiveEditingAndPersistence(t *testing.T) {
 		t.Fatal("changing source moved the meeting")
 	}
 	saved, err := settings.Load(path)
-	if err != nil || saved.Source != "Tokyo" {
+	if err != nil || saved.Source != "Tokyo" || saved.Colours != cfg.Colours {
 		t.Fatalf("source not saved: %+v %v", saved, err)
 	}
 	m = press(m, "e")
@@ -191,7 +218,7 @@ func TestInteractiveRepeatedHourAndWallDay(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	m := newUI(cfg, filepath.Join(t.TempDir(), "config.json"), meeting, testNow)
+	m := newUI(cfg, filepath.Join(t.TempDir(), "config.yaml"), meeting, testNow)
 	m = press(m, "ctrl+f")
 	if m.mode != "fold" {
 		t.Fatalf("expected occurrence chooser, got %s: %s", m.mode, m.status)
