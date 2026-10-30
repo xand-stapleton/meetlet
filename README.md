@@ -40,9 +40,6 @@ The interactive planner starts with London, Campinas, Florida (Eastern), and Bon
 The initial meeting is **15:00 today in the source location**, with a one-hour
 duration. Redirecting output prints the meeting times instead of starting the UI.
 
-The header picks one of a series of time-zone jokes at startup, inspired by
-*The West Wing*: "20 Hours in America, Part I".
-
 ## Install
 
 Build and install the CLI for your user:
@@ -331,3 +328,8 @@ leap years, month boundaries, and navigation across clock changes.
 City search tests use an in-memory HTTP transport, including ambiguous names,
 typos, offline errors, invalid zones, cancellation, and stale responses; no test
 requires internet access.
+
+### Misc
+
+The header picks one of a series of time-zone jokes at startup, inspired by
+*The West Wing*: "20 Hours in America, Part I".
