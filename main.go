@@ -22,7 +22,7 @@ import (
 	"meetlet/internal/settings"
 )
 
-const usage = `meetlet — find a time that travels well
+var usage = "meetlet — " + startupJoke + `
 
 Usage:
   meetlet                         Open the interactive planner

@@ -377,7 +377,7 @@ func (m ui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m ui) View() tea.View {
 	var b strings.Builder
-	b.WriteString(accent.Bold(true).Render("meetlet") + muted.Render("  /  a time that travels well") + "\n\n")
+	writeAll(&b, accent.Bold(true).Render("meetlet"), muted.Render("  /  "+startupJoke), "\n\n")
 	if m.mode == "date" {
 		b.WriteString(m.datePickerView())
 		return m.terminalView(b.String())
