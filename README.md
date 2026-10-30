@@ -69,12 +69,7 @@ times, or export paths), `Ctrl-B` / `Ctrl-F` move the text cursor instead.
 The on-screen hints abbreviate Ctrl keys as `^B`, `^F`, `^P`, and `^N`.
 
 In the location search, type a city, an IANA zone such as `Asia/Tokyo`, or a custom
-label such as `Office=Europe/Paris`. Use arrows to select a match and Enter to add
-it. City results include region and country, so `harwich` offers separate choices
-for Massachusetts, England, and other matches. Two characters search exact names;
-three or more also accept partial names. Matching ignores case and accents and
-tolerates minor spelling errors. Narrow a search with `Harwich, UK` or `Harwich, MA`.
-The screen scrolls through saved locations as you select them.
+label such as `Office=Europe/Paris`. 
 
 Changing the source keeps the meeting at the **same instant**. Edit its time
 afterward if you want a different wall-clock time in the new source location.
