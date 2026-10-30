@@ -1,5 +1,10 @@
 # Meetlet
 
+<img src="assets/meetlet-logo.svg" alt="Meetlet: the Go gopher holding a clock and calendar" width="240">
+
+Go gopher by [Renée French](https://go.dev/blog/gopher),
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); adapted for Meetlet.
+
 A small meeting planner for your terminal, built with Go and Charm's
 [Bubble Tea](https://github.com/charmbracelet/bubbletea),
 [Bubbles](https://github.com/charmbracelet/bubbles), and
@@ -8,7 +13,7 @@ A small meeting planner for your terminal, built with Go and Charm's
 Pick a **date, local time, and source location**. Meetlet shows the same instant
 everywhere else, including each location's local date, UTC offset, and clock
 changes. Export a calendar event to import into Apple Calendar, Google Calendar,
-Outlook, or another calendar app.
+Outlook, or another calendar app with an ICS file.
 
 Meeting calculations and saved locations work offline. Finding new towns and
 cities worldwide uses an online lookup; no API key is needed for the default
