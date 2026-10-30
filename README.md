@@ -1,6 +1,4 @@
-# Meetlet
-
-<img src="assets/meetlet-logo.svg" alt="Meetlet: the Go gopher holding a clock and calendar" width="240">
+<img src="assets/meetlet-logo-text.svg" alt="Meetlet: the Go gopher holding a clock and calendar" width="240">
 
 Go gopher by [Renée French](https://go.dev/blog/gopher),
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); adapted for Meetlet.
