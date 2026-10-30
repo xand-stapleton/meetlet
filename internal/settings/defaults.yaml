@@ -1,0 +1,18 @@
+# Built-in defaults. Copy this file to your config directory to customise it.
+version: 1
+source: London
+locations:
+  - name: London
+    zone: Europe/London
+  - name: Campinas
+    zone: America/Sao_Paulo
+  - name: Florida (Eastern)
+    zone: America/New_York
+  - name: Bonn
+    zone: Europe/Berlin
+colours:
+  accent: "#A6E3A1"
+  # Optional selector colour; omit it to use accent for selections and cursors.
+  muted: "#9299B0"
+  warning: "#F9D58B"
+  # Optional text/background hex colours; omitted values follow your terminal.

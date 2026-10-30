@@ -18,8 +18,8 @@ var zoneData string
 
 // Location separates a friendly label (Bonn) from its rule set (Europe/Berlin).
 type Location struct {
-	Name string `json:"name"`
-	Zone string `json:"zone"`
+	Name string `json:"name" yaml:"name"`
+	Zone string `json:"zone" yaml:"zone"`
 }
 
 type entry struct {
@@ -73,10 +73,6 @@ var cities = []entry{
 	{Location{"Brisbane", "Australia/Brisbane"}, ""},
 	{Location{"Auckland", "Pacific/Auckland"}, ""},
 	{Location{"UTC", "UTC"}, "etc/utc"},
-}
-
-func Defaults() []Location {
-	return []Location{cities[0].Location, cities[1].Location, cities[2].Location, cities[4].Location}
 }
 
 func normalize(s string) string {

@@ -11,6 +11,7 @@ import (
 
 	"meetlet/internal/places"
 	"meetlet/internal/planner"
+	"meetlet/internal/settings"
 )
 
 func event(t *testing.T) planner.Meeting {
@@ -24,7 +25,7 @@ func event(t *testing.T) planner.Meeting {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return planner.Meeting{At: at, Origin: p, Locations: places.Defaults(), Title: "Team sync", Duration: 45 * time.Minute}
+	return planner.Meeting{At: at, Origin: p, Locations: settings.Default().Locations, Title: "Team sync", Duration: 45 * time.Minute}
 }
 
 func TestCalendarUTCAndRequiredProperties(t *testing.T) {

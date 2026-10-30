@@ -55,6 +55,7 @@ Examples:
   meetlet delete-ics sync.ics
 
 Use --config PATH before a command, or set MEETLET_CONFIG, to choose a settings file.
+That YAML file sets UI colours, default source, and the locations shown at startup.
 Florida defaults to Eastern time; use "Florida (Central)" or pensacola for Central.
 With redirected output, running meetlet prints times instead of opening the UI.
 Worldwide city search uses Open-Meteo / GeoNames and needs an internet connection.

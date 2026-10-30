@@ -252,16 +252,62 @@ results. Review the provider's plans before using the online service commerciall
 
 ## Settings
 
-Settings are JSON in your OS's user config directory, under `meetlet/config.json`:
-on macOS, normally `~/Library/Application Support/meetlet/config.json`; on Linux,
-normally `~/.config/meetlet/config.json`. They are created on the first saved
-location or source change. Writes replace the file atomically.
+On **macOS and Linux**, settings are YAML at `~/.config/meetlet/config.yaml`.
+If `XDG_CONFIG_HOME` is set, Meetlet uses `$XDG_CONFIG_HOME/meetlet/config.yaml`
+instead. `MEETLET_CONFIG` and `--config PATH` override this location. On other
+platforms, Meetlet uses the OS's user config directory. Settings are created on
+the first saved location or source change; writes replace the file atomically.
 
-Use a separate file for another group of people:
+The same file controls **colours, the default source, and the locations shown
+at startup**. This example uses the dark, medium-contrast
+[Gruvbox Material palette](https://github.com/sainnhe/gruvbox-material/blob/master/autoload/gruvbox_material.vim):
+
+```yaml
+version: 1
+source: London
+locations:
+  - name: London
+    zone: Europe/London
+  - name: Bonn
+    zone: Europe/Berlin
+colours:
+  accent: "#A9B665"     # Green: headings and meeting times
+  selector: "#EA6962"   # Red: chevrons, selected date, and input cursor (optional)
+  muted: "#928374"      # Grey: hints and secondary text
+  warning: "#D8A657"    # Yellow: clock changes and errors
+  text: "#D4BE98"       # Main text (optional)
+  background: "#282828" # Background (optional)
+```
+
+`source` must match the `name` of one of your locations and is used when you omit
+`--from`. `locations` replaces the built-in list, in the order shown. Each `zone`
+is an IANA identifier, so daylight-saving changes are handled automatically.
+
+Quote six-digit `#RRGGBB` colours: an unquoted `#` starts a YAML comment. Omit
+`colours`, or an individual colour, to keep its default. Ordinary text and the
+background follow your terminal unless `text` and `background` are set. Unknown
+fields, duplicate keys, and invalid colour values are reported as errors.
+If `selector` is omitted, selections and cursors use the accent colour.
+Configs using the legacy US spelling of the palette key are still readable;
+saves always use `colours`.
+
+The shipped defaults live in
+[`internal/settings/defaults.yaml`](internal/settings/defaults.yaml), embedded
+when building the CLI. Edit your user config to change your own defaults without
+rebuilding. Restart Meetlet to read manual edits. Adding or removing a location
+and changing the source preserve your configured colour values when saving.
+
+If `config.yaml` is absent, Meetlet reads a sibling `config.json` from earlier
+versions. The next location/source save writes `config.yaml` and leaves the old
+JSON intact. Existing JSON files also remain readable with `--config` (YAML
+accepts JSON); all saves now use YAML.
+
+To start a separate configuration for another group of people:
 
 ```sh
-./bin/meetlet --config ./team.json add tokyo
-./bin/meetlet --config ./team.json
+cp internal/settings/defaults.yaml ./team.yaml
+./bin/meetlet --config ./team.yaml add tokyo
+./bin/meetlet --config ./team.yaml
 # Alternatively: set MEETLET_CONFIG to a file path.
 ```
 
@@ -311,7 +357,7 @@ and the standard library. The time conversion and export code has no UI dependen
 - `datepicker.go`: month calendar and keyboard navigation for the date editor.
 - `citysearch.go`: background city search, result selection, and cancellation.
 - `internal/places`: offline aliases, fuzzy matching, IANA zones, and geocoding.
-- `internal/settings`: validation and atomic persistence.
+- `internal/settings`: YAML defaults, colour/location validation, and atomic persistence.
 - `internal/planner`: wall-time validation, conversions, exact zone transitions.
 - `internal/calendar`: RFC 5545 export with UTC times, escaped text, CRLF endings,
   and UTF-8-safe line folding at 75 bytes.
