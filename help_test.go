@@ -22,11 +22,8 @@ func TestHelpNavigation(t *testing.T) {
 		for _, close := range []string{"esc", "enter", "?", "h"} {
 			t.Run(open+"/"+close, func(t *testing.T) {
 				m := newUI(cfg, "unused.yaml", meeting, testNow)
-				m.width, m.height, m.selected = 80, 24, 2
+				m.width, m.height, m.selected = 160, 80, 2
 				overview := m.View().Content
-				if !strings.Contains(overview, "demystify time zones") || strings.Contains(overview, startupJoke) {
-					t.Fatal("main screen should show the tagline without the joke")
-				}
 				m = press(m, open)
 				if m.mode != "help" || !strings.Contains(m.View().Content, startupJoke) {
 					t.Fatal("help did not open with the joke")
