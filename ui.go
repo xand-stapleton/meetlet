@@ -22,8 +22,8 @@ import (
 
 var strong = lipgloss.NewStyle().Bold(true)
 
-// ui has one screen and one reusable input. mode is empty while browsing, or
-// names the field being edited. This keeps keyboard behavior in one place.
+// ui has one reusable input. mode is empty while browsing, "help" while reading
+// shortcuts, or the field being edited. This keeps keyboard behaviour in one place.
 type ui struct {
 	cfg                  settings.Config
 	configPath           string
@@ -256,6 +256,15 @@ func (m ui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.closeInput()
 			return m, tea.Quit
 		}
+		if m.mode == "help" {
+			switch key {
+			case "esc", "enter", "?", "h":
+				m.closeInput()
+			case "q":
+				return m, tea.Quit
+			}
+			return m, nil
+		}
 		if m.mode != "" {
 			if m.mode == "date" && m.moveCalendar(key) {
 				return m, nil
@@ -310,6 +319,9 @@ func (m ui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch key {
 		case "q", "esc":
 			return m, tea.Quit
+		case "?", "h":
+			m.mode = "help"
+			return m, nil
 		case "j", "down", "ctrl+n":
 			m.selected = (m.selected + 1) % len(m.cfg.Locations)
 		case "k", "up", "ctrl+p":
@@ -378,7 +390,7 @@ func (m ui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	}
-	if m.mode != "" && m.mode != "fold" {
+	if m.mode != "" && m.mode != "fold" && m.mode != "help" {
 		var cmd tea.Cmd
 		before := m.input.Value()
 		m.input, cmd = m.input.Update(msg)
@@ -394,8 +406,11 @@ func (m ui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m ui) View() tea.View {
+	if m.mode == "help" {
+		return m.terminalView(m.helpView())
+	}
 	var b strings.Builder
-	writeAll(&b, m.accent.Bold(true).Render("meetlet"), m.muted.Render("  /  "+startupJoke), "\n\n")
+	writeAll(&b, m.accent.Bold(true).Render("meetlet"), m.muted.Render("  /  demystify time zones"), "\n\n")
 	if m.mode == "date" {
 		b.WriteString(m.datePickerView())
 		return m.terminalView(b.String())
@@ -471,8 +486,8 @@ func (m ui) View() tea.View {
 		}
 		b.WriteString("\n" + style.Render(m.status) + "\n")
 	}
-	b.WriteString("\n" + m.muted.Render("d date · t time · ←/→/^B/^F day · [/] 15m · n title · l length") + "\n")
-	b.WriteString(m.muted.Render("a add · x remove · ↑/↓/^P/^N pick · s source · e export · D delete · q quit"))
+	b.WriteString("\n" + m.muted.Render("d date · t time · ←/→/^B/^F day · [/] 15m · n title · l length · a add · x remove"+"\n"+"↑/↓/^P/^N pick · s source · e export · D delete · h help· q quit"))
+	// b.WriteString(m.muted.Render("a add · x remove · ↑/↓/^P/^N pick · s source · e export · D delete · h help· q quit"))
 	return m.terminalView(b.String())
 }
 

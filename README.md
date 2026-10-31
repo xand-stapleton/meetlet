@@ -78,8 +78,12 @@ make install PREFIX=/usr DESTDIR=/tmp/meetlet-package
 
 ## Interactive controls
 
+Press `?` or `h` for a simple help screen. Press `Esc`, `Enter`, or `?` to return
+to your meeting. The random West Wing joke lives on the help screen.
+
 | Key | Action |
 | --- | --- |
+| `?` / `h` | Open help |
 | `d` / `t` | Open the date calendar / edit local time |
 | `←` / `→` or `Ctrl-B` / `Ctrl-F` | Previous / next calendar day; keep the local meeting time |
 | `[` / `]` | Move the meeting instant back / forward 15 minutes |

@@ -10,5 +10,5 @@ var timeZoneJokes = [...]string{
 	"Can we have a civilisation?",
 }
 
-// Choose once per process so redraws and navigation keep the same punchline.
+// Choose once per process so reopening help keeps the same punchline.
 var startupJoke = timeZoneJokes[rand.IntN(len(timeZoneJokes))]
