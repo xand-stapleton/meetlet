@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"strings"
 	"testing"
 
@@ -14,7 +13,7 @@ import (
 func TestConfiguredColoursAcrossViews(t *testing.T) {
 	cfg := settings.Default()
 	cfg.Colours = settings.Colours{Accent: "#112233", Muted: "#445566", Warning: "#778899"}
-	meeting, _, err := meetingArgs(nil, cfg, testNow, &bytes.Buffer{}, false)
+	meeting, err := newMeeting(cfg, testNow)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,10 +65,7 @@ func TestClockChangeWarningColours(t *testing.T) {
 	cfg.Colours.Muted = "#928374"
 	for _, date := range []string{"2026-10-28", "2026-11-02"} {
 		t.Run(date, func(t *testing.T) {
-			meeting, _, err := meetingArgs([]string{"--date", date}, cfg, testNow, &bytes.Buffer{}, false)
-			if err != nil {
-				t.Fatal(err)
-			}
+			meeting := meetingAt(t, cfg, date, "15:00")
 			m := newUI(cfg, "unused.yaml", meeting, testNow)
 			m.width = 110
 			if date == "2026-11-02" {
@@ -98,7 +94,7 @@ func TestClockChangeWarningColours(t *testing.T) {
 func TestSeparateSelectorColour(t *testing.T) {
 	cfg := settings.Default()
 	cfg.Colours.Accent, cfg.Colours.Selector = "#A9B665", "#EA6962"
-	meeting, _, err := meetingArgs(nil, cfg, testNow, &bytes.Buffer{}, false)
+	meeting, err := newMeeting(cfg, testNow)
 	if err != nil {
 		t.Fatal(err)
 	}

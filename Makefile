@@ -3,7 +3,6 @@
 
 GO ?= go
 GOFMT ?= gofmt
-ARGS ?=
 
 # Install locally by default; override these for system installs or packaging.
 PREFIX ?= $(HOME)/.local
@@ -19,8 +18,8 @@ help: ## Show available commands
 build: ## Build bin/meetlet
 	$(GO) build -o bin/meetlet .
 
-run: build ## Build and run; pass CLI arguments with ARGS='...'
-	./bin/meetlet $(ARGS)
+run: build ## Build and run the planner
+	./bin/meetlet
 
 test: ## Run all tests
 	$(GO) test ./...

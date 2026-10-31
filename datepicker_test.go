@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -11,17 +10,15 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 
+	"meetlet/internal/places"
 	"meetlet/internal/settings"
 )
 
 func dateEditor(t *testing.T, date, clock string) ui {
 	t.Helper()
 	cfg := settings.Default()
-	meeting, _, err := meetingArgs([]string{"--date", date, "--time", clock}, cfg, testNow, &bytes.Buffer{}, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return press(newUI(cfg, filepath.Join(t.TempDir(), "config.json"), meeting, testNow), "d")
+	meeting := meetingAt(t, cfg, date, clock)
+	return press(newUI(cfg, filepath.Join(t.TempDir(), "config.yaml"), meeting, testNow), "d")
 }
 
 func TestCalendarNavigationAndConfirmation(t *testing.T) {
@@ -109,13 +106,15 @@ func TestCalendarTypedDatesAndSourceToday(t *testing.T) {
 	}
 
 	cfg := settings.Default()
-	meeting, _, err := meetingArgs([]string{"--from", "Tokyo"}, cfg, testNow, &bytes.Buffer{}, false)
+	cfg.Source = "Tokyo"
+	cfg.Locations = []places.Location{{Name: "Tokyo", Zone: "Asia/Tokyo"}}
+	meeting, err := newMeeting(cfg, testNow)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// It is already the 29th in Tokyo, while the UTC date is still the 28th.
 	now := time.Date(2026, 10, 28, 22, 0, 0, 0, time.UTC)
-	m = newUI(cfg, filepath.Join(t.TempDir(), "config.json"), meeting, now)
+	m = newUI(cfg, filepath.Join(t.TempDir(), "config.yaml"), meeting, now)
 	m = press(press(m, "d"), "home")
 	if m.input.Value() != "2026-10-29" {
 		t.Fatal("Home did not use the source's date:", m.input.Value())

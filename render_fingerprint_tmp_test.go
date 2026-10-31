@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"testing"
 	"time"
@@ -11,12 +10,12 @@ import (
 
 func TestRenderFingerprints(t *testing.T) {
 	cfg := settings.Default()
-	meeting, _, err := meetingArgs(nil, cfg, testNow, &bytes.Buffer{}, false)
+	meeting, err := newMeeting(cfg, testNow)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, mode := range []string{"overview", "warnings", "date", "cities", "time", "title", "export", "delete-ics", "fold"} {
-		m := newUI(cfg, "unused.json", meeting, testNow)
+		m := newUI(cfg, "unused.yaml", meeting, testNow)
 		switch mode {
 		case "warnings":
 			m.meeting.At = time.Date(2026, 11, 2, 15, 0, 0, 0, time.UTC)

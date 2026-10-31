@@ -18,8 +18,8 @@ var zoneData string
 
 // Location separates a friendly label (Bonn) from its rule set (Europe/Berlin).
 type Location struct {
-	Name string `json:"name" yaml:"name"`
-	Zone string `json:"zone" yaml:"zone"`
+	Name string `yaml:"name"`
+	Zone string `yaml:"zone"`
 }
 
 type entry struct {
@@ -134,7 +134,7 @@ func Resolve(query string, saved []Location) (Location, error) {
 			return Location{strings.ReplaceAll(parts[len(parts)-1], "_", " "), zone}, nil
 		}
 	}
-	return Location{}, fmt.Errorf("unknown location %q; find and save it with meetlet search / add, or use an IANA zone (Asia/Tokyo) or Name=Area/City", query)
+	return Location{}, fmt.Errorf("unknown location %q; search for a city or use an IANA zone (Asia/Tokyo) or Name=Area/City", query)
 }
 
 func Search(query string, limit int) []Location {

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -11,6 +11,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"meetlet/internal/places"
+	"meetlet/internal/planner"
 	"meetlet/internal/settings"
 )
 
@@ -20,91 +21,39 @@ func TestMeetingDefaultsFromConfig(t *testing.T) {
 	cfg := settings.Default()
 	cfg.Source = "Tokyo"
 	cfg.Locations = []places.Location{{Name: "Tokyo", Zone: "Asia/Tokyo"}, {Name: "Home", Zone: "Europe/London"}}
-	path := filepath.Join(t.TempDir(), "team.yaml")
-	if err := settings.Save(path, cfg); err != nil {
-		t.Fatal(err)
-	}
-	var out bytes.Buffer
-	if err := run([]string{"--config", path, "check", "--date", "2026-11-02"}, &out, testNow); err != nil {
-		t.Fatal(err)
-	}
-	for _, want := range []string{"15:00 JST", "Tokyo", "Home", "06:00"} {
-		if !strings.Contains(out.String(), want) {
-			t.Errorf("missing %q in %s", want, out.String())
-		}
-	}
-	for _, absent := range []string{"Campinas", "Bonn", "Florida"} {
-		if strings.Contains(out.String(), absent) {
-			t.Errorf("built-in location %q leaked into configured locations", absent)
-		}
-	}
-}
-
-func TestCLIWorkflow(t *testing.T) {
-	dir := t.TempDir()
-	t.Setenv("MEETLET_CONFIG", filepath.Join(dir, "config.yaml"))
-	invoke := func(args ...string) string {
-		t.Helper()
-		var out bytes.Buffer
-		if err := run(args, &out, testNow); err != nil {
-			t.Fatalf("%v: %v", args, err)
-		}
-		return out.String()
-	}
-	text := invoke("check", "--date", "2026-11-02", "--time", "3pm")
-	for _, want := range []string{"London", "Campinas", "Florida (Eastern)", "Bonn", "10:00", "12:00", "16:00", "01 Nov 2026"} {
-		if !strings.Contains(text, want) {
-			t.Errorf("missing %q in %s", want, text)
-		}
-	}
-	invoke("add", "--name", "Office", "Asia/Tokyo")
-	invoke("source", "Office")
-	if text := invoke("locations"); !strings.Contains(text, "Office (source)") {
-		t.Fatal(text)
-	}
-	invoke("source", "London")
-	invoke("remove", "Office")
-	if text := invoke("locations"); strings.Contains(text, "Office") {
-		t.Fatal(text)
-	}
-	invite := filepath.Join(dir, "sync.ics")
-	invoke("export", "--from", "london", "--date", "2026-11-02", "--time", "3pm", "--duration", "30m", "--title", "Team sync", "--out", invite)
-	b, err := os.ReadFile(invite)
+	// Tokyo is already on the next date when the UTC day is still the 28th.
+	now := time.Date(2026, 10, 28, 22, 0, 0, 0, time.UTC)
+	meeting, err := newMeeting(cfg, now)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Contains(b, []byte("DTSTART:20261102T150000Z")) || !bytes.Contains(b, []byte("DTEND:20261102T153000Z")) {
-		t.Fatal(string(b))
+	if meeting.At.Format("2006-01-02 15:04 MST") != "2026-10-29 15:00 JST" {
+		t.Fatal("meeting did not use the source's local date and time:", meeting.At)
 	}
-	// Deleting an exported file does not depend on the locations config.
-	if err := os.WriteFile(filepath.Join(dir, "config.yaml"), []byte("invalid JSON"), 0600); err != nil {
-		t.Fatal(err)
+	if meeting.Origin != cfg.Origin() || !reflect.DeepEqual(meeting.Locations, cfg.Locations) {
+		t.Fatal("meeting did not use configured locations:", meeting)
 	}
-	invoke("delete-ics", invite)
-	if _, err := os.Stat(invite); !os.IsNotExist(err) {
-		t.Fatalf("calendar file was not deleted: %v", err)
+	if meeting.Title != "Meeting" || meeting.Duration != time.Hour {
+		t.Fatal("incorrect initial title or duration:", meeting)
 	}
 }
 
-func TestCLIErrorsAndCustomDestination(t *testing.T) {
-	t.Setenv("MEETLET_CONFIG", filepath.Join(t.TempDir(), "config.yaml"))
-	for _, args := range [][]string{
-		{"check", "--date", "2026-03-29", "--time", "01:30"},
-		{"check", "--date", "2026-10-25", "--time", "01:30"},
-		{"export", "--duration", "0m"}, {"remove", "London"}, {"check", "--to", "made up"},
-		{"delete-ics"}, {"delete-ics", "one.ics", "two.ics"}, {"delete-ics", "notes.txt"},
-	} {
-		if err := run(args, &bytes.Buffer{}, testNow); err == nil {
-			t.Errorf("accepted %v", args)
-		}
-	}
-	var out bytes.Buffer
-	if err := run([]string{"check", "--date", "2026-10-25", "--time", "01:30", "--fold", "later", "--to", "Tokyo"}, &out, testNow); err != nil {
+// meetingAt sets up a particular local date for UI navigation and DST checks.
+func meetingAt(t testing.TB, cfg settings.Config, date, clock string) planner.Meeting {
+	t.Helper()
+	meeting, err := newMeeting(cfg, testNow)
+	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(out.String(), "Tokyo") || strings.Contains(out.String(), "Campinas") {
-		t.Fatal(out.String())
+	loc, err := meeting.Origin.Load()
+	if err != nil {
+		t.Fatal(err)
 	}
+	meeting.At, err = planner.WallTime(date, clock, loc, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return meeting
 }
 
 func press(m ui, key string) ui {
@@ -141,7 +90,7 @@ func TestInteractiveEditingAndPersistence(t *testing.T) {
 	cfg := settings.Default()
 	cfg.Colours.Accent = "#123456"
 	cfg.Colours.Selector = "#EA6962"
-	meeting, _, err := meetingArgs(nil, cfg, testNow, &bytes.Buffer{}, false)
+	meeting, err := newMeeting(cfg, testNow)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -214,10 +163,7 @@ func TestInteractiveEditingAndPersistence(t *testing.T) {
 
 func TestInteractiveRepeatedHourAndWallDay(t *testing.T) {
 	cfg := settings.Default()
-	meeting, _, err := meetingArgs([]string{"--date", "2026-10-24", "--time", "01:30"}, cfg, testNow, &bytes.Buffer{}, false)
-	if err != nil {
-		t.Fatal(err)
-	}
+	meeting := meetingAt(t, cfg, "2026-10-24", "01:30")
 	m := newUI(cfg, filepath.Join(t.TempDir(), "config.yaml"), meeting, testNow)
 	m = press(m, "ctrl+f")
 	if m.mode != "fold" {

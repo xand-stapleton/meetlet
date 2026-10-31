@@ -41,11 +41,11 @@ make build
 
 The interactive planner starts with London, Campinas, Florida (Eastern), and Bonn.
 The initial meeting is **15:00 today in the source location**, with a one-hour
-duration. Redirecting output prints the meeting times instead of starting the UI.
+duration. All meeting actions are available inside the planner.
 
 ## Install
 
-Build and install the CLI for your user:
+Build and install Meetlet for your user:
 
 ```sh
 make install
@@ -122,73 +122,15 @@ afterward if you want a different wall-clock time in the new source location.
 Source and location changes are saved immediately. Meeting date, time, name, and
 duration apply to the current session.
 
-## Commands
-
-Arrange a meeting for 3pm in London on a particular date:
-
-```sh
-./bin/meetlet check --from london --date 2026-11-02 --time 3pm
-```
-
-For that date, the conversion is:
-
-```text
-London              Mon 02 Nov 2026   15:00   GMT   UTC+00:00
-Campinas            Mon 02 Nov 2026   12:00   -03   UTC-03:00
-Florida (Eastern)   Mon 02 Nov 2026   10:00   EST   UTC-05:00
-Bonn                Mon 02 Nov 2026   16:00   CET   UTC+01:00
-```
-
-Save locations over time, change the default source, or choose destinations for
-one meeting:
-
-```sh
-./bin/meetlet add tokyo
-./bin/meetlet add --name "Office" Europe/Paris
-./bin/meetlet search australia
-./bin/meetlet locations
-./bin/meetlet source Bonn
-./bin/meetlet remove Tokyo
-./bin/meetlet check --from london --date 2026-07-15 --time 15:00 --to campinas,bonn,pensacola
-```
-
-Search for any town or city and choose among numbered matches:
-
-```sh
-./bin/meetlet search harwich
-./bin/meetlet search harwcih
-./bin/meetlet add --pick 2 harwich
-# Or give the saved location a shorter label:
-./bin/meetlet add --pick 1 --name "Harwich MA" harwich
-```
-
-Choose the number shown by your search; results depend on the city database.
-If an unknown name has several matches, `add` prints them and requires `--pick`.
-Exact built-in aliases (such as `london`) and IANA zones keep working offline;
-use `search london` and `add --pick N london` to select another London.
-
-After adding a city, its saved label works with `--from`, `source`, and `remove`.
-It also appears in the default destination list. A single qualified label works
-with `--to`; use semicolons to separate multiple names that contain commas:
-
-```sh
-./bin/meetlet check --to 'Harwich, England, United Kingdom;Bonn'
-```
-
-**Florida:** `florida`, `miami`, `orlando`, and `tampa` select Eastern time
-(`America/New_York`). `pensacola`, `panama city`, or `Florida (Central)` select
-Central time (`America/Chicago`). Use the zone appropriate for your actual city.
-
 ## Export to a calendar
 
-```sh
-./bin/meetlet export --from london --date 2026-11-02 --time 3pm \
-  --title "Team sync" --duration 45m --out team-sync.ics
-```
+Press `n` to set the meeting title, `l` to set its length, and `e` to export.
+Edit the file path and press `Enter` to save. The default name is
+`meetlet-YYYYMMDD-HHMM.ics` in the current directory. Existing files are never
+overwritten; choose another name.
 
-Open `team-sync.ics` in Apple Calendar, or import it using another calendar app's
-import command. Without `--out`, the name is `meetlet-YYYYMMDD-HHMM.ics` in the
-current directory. Existing files are never overwritten; choose another name.
+Open the saved `.ics` file in Apple Calendar, or import it into another calendar
+app.
 
 The event contains a title, UTC start and end, and a description listing the
 local meeting time in each location. UTC makes each calendar display the same
@@ -198,12 +140,7 @@ it does not send email invitations or create a recurring series.
 
 To delete an exported file, press `D` in the planner. The path starts with the
 last file exported in this session (or the default name for the meeting).
-Edit it if needed, then press `Enter` to delete or `Esc` to cancel. You can also
-delete a file directly from the command line:
-
-```sh
-./bin/meetlet delete-ics team-sync.ics
-```
+Edit it if needed, then press `Enter` to delete or `Esc` to cancel.
 
 Deletion accepts a single regular `.ics` file; directories, symlinks, and other
 file extensions are rejected. It removes the local file. An event already
@@ -214,20 +151,16 @@ imported into Apple Calendar or another calendar app must be deleted in that app
 Meetlet uses IANA time zones rather than fixed offsets. It reports all offset
 changes between now and the meeting, and the next change within 12 months after
 the meeting. The interactive screen shows details for the selected location and
-flags changes affecting other locations. `check` prints every location's details.
+flags changes affecting other locations.
 Transition times are shown in the affected location **after** the clock change.
 
 Some wall-clock times do not exist when clocks jump forward. Meetlet rejects
 these instead of silently moving the meeting. When clocks go back, some times
-occur twice. The UI asks which occurrence you mean; commands require a choice:
+occur twice. The planner asks you to choose the first or second occurrence.
 
-```sh
-./bin/meetlet check --from london --date 2026-10-25 --time 01:30 --fold later
-```
-
-Use `--fold earlier` for the first occurrence. Dates use `YYYY-MM-DD` (years
-1900–9998); times accept `15:00`, `3pm`, or `3:30pm`. The default date is today in
-the source zone. Meeting lengths must be positive and at most seven days.
+Dates use `YYYY-MM-DD` (years 1900–9998); times accept `15:00`, `3pm`, or `3:30pm`.
+The default date is today in the source zone. Meeting lengths must be positive
+and at most seven days.
 
 The executable includes Go's time zone database as a fallback when the system
 has none. Friendly aliases cover common cities; offline search also includes all
@@ -261,9 +194,9 @@ results. Review the provider's plans before using the online service commerciall
 
 On **macOS and Linux**, settings are YAML at `~/.config/meetlet/config.yaml`.
 If `XDG_CONFIG_HOME` is set, Meetlet uses `$XDG_CONFIG_HOME/meetlet/config.yaml`
-instead. `MEETLET_CONFIG` and `--config PATH` override this location. On other
-platforms, Meetlet uses the OS's user config directory. Settings are created on
-the first saved location or source change; writes replace the file atomically.
+instead. Set `MEETLET_CONFIG` to use a different file. On other platforms,
+Meetlet uses the OS's user config directory. Settings are created on the first
+saved location or source change; writes replace the file atomically.
 
 The same file controls **colours, the default source, and the locations shown
 at startup**. This example uses the dark, medium-contrast
@@ -286,36 +219,28 @@ colours:
   background: "#282828" # Background (optional)
 ```
 
-`source` must match the `name` of one of your locations and is used when you omit
-`--from`. `locations` replaces the built-in list, in the order shown. Each `zone`
-is an IANA identifier, so daylight-saving changes are handled automatically.
+`source` must match the `name` of one of your locations and sets the initial
+meeting location. `locations` replaces the built-in list, in the order shown.
+Each `zone` is an IANA identifier, so daylight-saving changes are handled
+automatically.
 
 Quote six-digit `#RRGGBB` colours: an unquoted `#` starts a YAML comment. Omit
 `colours`, or an individual colour, to keep its default. Ordinary text and the
 background follow your terminal unless `text` and `background` are set. Unknown
 fields, duplicate keys, and invalid colour values are reported as errors.
 If `selector` is omitted, selections and cursors use the accent colour.
-Configs using the legacy US spelling of the palette key are still readable;
-saves always use `colours`.
 
 The shipped defaults live in
 [`internal/settings/defaults.yaml`](internal/settings/defaults.yaml), embedded
-when building the CLI. Edit your user config to change your own defaults without
+when building Meetlet. Edit your user config to change your own defaults without
 rebuilding. Restart Meetlet to read manual edits. Adding or removing a location
 and changing the source preserve your configured colour values when saving.
-
-If `config.yaml` is absent, Meetlet reads a sibling `config.json` from earlier
-versions. The next location/source save writes `config.yaml` and leaves the old
-JSON intact. Existing JSON files also remain readable with `--config` (YAML
-accepts JSON); all saves now use YAML.
 
 To start a separate configuration for another group of people:
 
 ```sh
 cp internal/settings/defaults.yaml ./team.yaml
-./bin/meetlet --config ./team.yaml add tokyo
-./bin/meetlet --config ./team.yaml
-# Alternatively: set MEETLET_CONFIG to a file path.
+MEETLET_CONFIG=./team.yaml meetlet
 ```
 
 ## Development
@@ -338,11 +263,9 @@ Run `make` or `make help` to list the commands:
 | `make uninstall` | Remove the installed executable |
 | `make clean` | Remove the built executable and coverage report |
 
-Pass application arguments through `ARGS`, and override the Go executable when
-needed:
+Override the Go executable when needed:
 
 ```sh
-make run ARGS='check --date 2026-11-02 --time 3pm'
 make build GO=/path/to/go
 ```
 
@@ -356,11 +279,12 @@ Go 1.25 and the current stable Go release, on pushes and pull requests.
 
 ## Code map
 
-The implementation uses Charm's UI libraries, Go's terminal and Unicode helpers,
+The implementation uses Charm's UI libraries, Go's Unicode helpers,
 and the standard library. The time conversion and export code has no UI dependency.
 
-- `main.go`: command parsing and plain-text output.
-- `ui.go`: one Bubble Tea screen and a reusable text input.
+- `main.go`: load settings, create the initial meeting, and open the planner.
+- `ui.go`: Bubble Tea views, keyboard handling, and a reusable text input.
+- `help.go`: simple keyboard reference and a random West Wing joke.
 - `datepicker.go`: month calendar and keyboard navigation for the date editor.
 - `citysearch.go`: background city search, result selection, and cancellation.
 - `internal/places`: offline aliases, fuzzy matching, IANA zones, and geocoding.
@@ -384,5 +308,5 @@ requires internet access.
 
 ### Misc
 
-The header picks one of a series of time-zone jokes at startup, inspired by
+The help screen shows a time-zone joke chosen at startup, inspired by
 *The West Wing*: "20 Hours in America, Part I".

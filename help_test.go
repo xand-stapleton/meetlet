@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"reflect"
 	"strings"
 	"testing"
@@ -14,7 +13,7 @@ import (
 
 func TestHelpNavigation(t *testing.T) {
 	cfg := settings.Default()
-	meeting, _, err := meetingArgs(nil, cfg, testNow, &bytes.Buffer{}, false)
+	meeting, err := newMeeting(cfg, testNow)
 	if err != nil {
 		t.Fatal(err)
 	}

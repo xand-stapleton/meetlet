@@ -23,19 +23,19 @@ var defaultYAML []byte
 // Colours names the UI colour roles. Empty Text and Background values leave
 // those colours to the terminal. Empty Selector falls back to Accent.
 type Colours struct {
-	Accent     string `yaml:"accent" json:"accent"`
-	Selector   string `yaml:"selector,omitempty" json:"selector,omitempty"`
-	Muted      string `yaml:"muted" json:"muted"`
-	Warning    string `yaml:"warning" json:"warning"`
-	Text       string `yaml:"text,omitempty" json:"text,omitempty"`
-	Background string `yaml:"background,omitempty" json:"background,omitempty"`
+	Accent     string `yaml:"accent"`
+	Selector   string `yaml:"selector,omitempty"`
+	Muted      string `yaml:"muted"`
+	Warning    string `yaml:"warning"`
+	Text       string `yaml:"text,omitempty"`
+	Background string `yaml:"background,omitempty"`
 }
 
 type Config struct {
-	Version   int               `yaml:"version" json:"version"`
-	Source    string            `yaml:"source" json:"source"`
-	Locations []places.Location `yaml:"locations" json:"locations"`
-	Colours   Colours           `yaml:"colours" json:"colours"`
+	Version   int               `yaml:"version"`
+	Source    string            `yaml:"source"`
+	Locations []places.Location `yaml:"locations"`
+	Colours   Colours           `yaml:"colours"`
 }
 
 // Default returns an independent copy of the shipped configuration. Embedding
@@ -70,56 +70,21 @@ func Path() (string, error) {
 	return filepath.Join(dir, "meetlet", "config.yaml"), nil
 }
 
-// normaliseLegacyColours accepts the old palette key in YAML and JSON. Rename
-// only the top-level mapping key; location names and other text stay untouched.
-// Strict decoding below still rejects unknown fields and duplicate keys.
-func normaliseLegacyColours(data []byte) ([]byte, error) {
-	var document yaml.Node
-	if err := yaml.Unmarshal(data, &document); err != nil {
-		return nil, err
-	}
-	if len(document.Content) == 0 || document.Content[0].Kind != yaml.MappingNode {
-		return data, nil
-	}
-	mapping, changed := document.Content[0], false
-	for i := 0; i < len(mapping.Content); i += 2 {
-		if key := mapping.Content[i]; key.Value == "colors" {
-			key.Value = "colours"
-			changed = true
-		}
-	}
-	if changed {
-		return yaml.Marshal(&document)
-	}
-	return data, nil
-}
-
+// Load reads one YAML file, or uses the shipped defaults if it does not exist.
 func Load(path string) (Config, error) {
-	readPath := path
 	b, err := os.ReadFile(path)
-	if errors.Is(err, os.ErrNotExist) && filepath.Base(path) == "config.yaml" {
-		// YAML accepts JSON, so old settings can be read without conversion.
-		// Save still writes to config.yaml, leaving the old file intact.
-		readPath = filepath.Join(filepath.Dir(path), "config.json")
-		b, err = os.ReadFile(readPath)
-	}
 	if errors.Is(err, os.ErrNotExist) {
 		return Default(), nil
 	}
 	if err != nil {
 		return Config{}, err
 	}
-	b, err = normaliseLegacyColours(b)
-	if err != nil {
-		return Config{}, fmt.Errorf("read config %s: %w", readPath, err)
-	}
-	// Start only the palette with defaults: old configs need no new fields,
-	// and a partial colours object overrides just the supplied colours.
+	// Omitted colours keep their defaults; locations come from this file.
 	c := Config{Colours: Default().Colours}
 	decoder := yaml.NewDecoder(bytes.NewReader(b))
 	decoder.KnownFields(true)
 	if err := decoder.Decode(&c); err != nil {
-		return c, fmt.Errorf("read config %s: %w", readPath, err)
+		return c, fmt.Errorf("read config %s: %w", path, err)
 	}
 	return c, c.Validate()
 }

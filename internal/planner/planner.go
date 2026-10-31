@@ -24,7 +24,7 @@ type Meeting struct {
 type AmbiguousError struct{ Earlier, Later time.Time }
 
 func (e *AmbiguousError) Error() string {
-	return fmt.Sprintf("this local time occurs twice as clocks go back: %s or %s; choose --fold earlier or --fold later", e.Earlier.Format("15:04 MST (Z07:00)"), e.Later.Format("15:04 MST (Z07:00)"))
+	return fmt.Sprintf("this local time occurs twice as clocks go back: %s or %s; choose an occurrence", e.Earlier.Format("15:04 MST (Z07:00)"), e.Later.Format("15:04 MST (Z07:00)"))
 }
 
 // WallTime interprets a date and clock reading in loc. Unlike time.Date, it

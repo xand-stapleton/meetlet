@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"testing"
 
 	"meetlet/internal/settings"
@@ -13,13 +12,13 @@ var renderedView string
 // saving settings. Report allocations as well as time to catch string churn.
 func BenchmarkView(b *testing.B) {
 	cfg := settings.Default()
-	meeting, _, err := meetingArgs(nil, cfg, testNow, &bytes.Buffer{}, false)
+	meeting, err := newMeeting(cfg, testNow)
 	if err != nil {
 		b.Fatal(err)
 	}
 	for _, mode := range []string{"overview", "date", "cities"} {
 		b.Run(mode, func(b *testing.B) {
-			m := newUI(cfg, "unused.json", meeting, testNow)
+			m := newUI(cfg, "unused.yaml", meeting, testNow)
 			switch mode {
 			case "date":
 				m.edit("date", "2026-08-31")

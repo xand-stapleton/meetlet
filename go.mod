@@ -6,7 +6,6 @@ require (
 	charm.land/bubbles/v2 v2.0.0
 	charm.land/bubbletea/v2 v2.0.8
 	charm.land/lipgloss/v2 v2.0.0
-	golang.org/x/term v0.35.0
 	golang.org/x/text v0.32.0
 	gopkg.in/yaml.v3 v3.0.1
 )
