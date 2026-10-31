@@ -17,6 +17,9 @@ Meeting calculations and saved locations work offline. Finding new towns and
 cities worldwide uses an online lookup; no API key is needed for the default
 non-commercial service.
 
+### Demo
+https://github.com/user-attachments/assets/c9c12418-c94f-42c8-ae2a-139729be7189
+
 ## Run
 
 Requires **Go 1.25 or newer**. The Makefile also requires Make and a POSIX shell
